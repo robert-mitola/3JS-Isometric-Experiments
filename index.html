@@ -1,0 +1,143 @@
+<html>
+    <head>
+        <meta charset=utf-8>
+        <title>
+            Isometrics
+        </title>
+    </head>
+    <body>
+        <script src="js/three.js"></script>
+        <script>
+            
+            var camera, scene, renderer, hemiLight, hemiLightHelper, cube, clock, deltaTime, theta=0, rotateCam=0;
+            var frustumSize= 10;
+            var groundMesh;
+            
+            init();
+            animate();
+            
+            function init(){
+                
+                // SETUP //////////////////////////////////////////////////////////////////////
+                
+                const aspect = window.innerWidth / window.innerHeight;
+                
+                scene = new THREE.Scene();
+                
+                // camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                //camera = new THREE.OrthographicCamera(window.innerWidth / -2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / -2, 5, 10);
+                camera = new THREE.OrthographicCamera(frustumSize * aspect / -2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / -2, 1, 2000);
+                camera.position.set(5, 5, 0);
+                camera.lookAt(new THREE.Vector3(0, 0, 0));
+                
+                renderer = new THREE.WebGLRenderer({antialias: true});
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                document.body.appendChild(renderer.domElement);
+                
+                clock = new THREE.Clock();
+                
+                // SHOW AXIS //////////////////////////////////////////////////////////////////
+                
+                var xAxis = new THREE.Geometry();
+                var yAxis = new THREE.Geometry();
+                var zAxis = new THREE.Geometry();
+                
+                xAxis.vertices.push(new THREE.Vector3(0, 0, 0));
+                xAxis.vertices.push(new THREE.Vector3(10, 0, 0));
+                const xAxisMat = new THREE.LineBasicMaterial({color: 0x0000FF});
+                const xLine = new THREE.Line(xAxis, xAxisMat);
+                
+                yAxis.vertices.push(new THREE.Vector3(0, 0, 0));
+                yAxis.vertices.push(new THREE.Vector3(0, 10, 0));
+                const yAxisMat = new THREE.LineBasicMaterial({color: 0xFF0000});
+                const yLine = new THREE.Line(yAxis, yAxisMat);
+                
+                zAxis.vertices.push(new THREE.Vector3(0, 0, 0));
+                zAxis.vertices.push(new THREE.Vector3(0, 0, 10));
+                const zAxisMat = new THREE.LineBasicMaterial({color: 0x00FF00});
+                const zLine = new THREE.Line(zAxis, zAxisMat);
+                
+                scene.add(xLine);
+                scene.add(yLine);
+                scene.add(zLine);
+                
+                // GROUND PLANE ///////////////////////////////////////////////////////////////
+                
+                const xUnits = 2;
+                const yUnits = 2;
+                const unitLength = 4;
+                                
+                //var groundTex = new THREE.TextureLoader().load("textures/grass.png");
+                //groundTex.wrapS = THREE.ClampToEdgeWrapping;
+                //groundTex.wrapT = THREE.ClampToEdgeWrapping;
+                
+                const groundGeometry = new THREE.PlaneGeometry(xUnits * unitLength, yUnits * unitLength, xUnits, yUnits);
+                //const groundMaterial = new THREE.MeshBasicMaterial({map: groundTex, side: THREE.FrontSide});
+                const groundMaterial = new THREE.MeshBasicMaterial({color: 0x08A515, side: THREE.FrontSide});
+                                
+                groundMesh = new THREE.Mesh(groundGeometry, groundMaterial);
+                groundMesh.rotation.x = -Math.PI / 2; // ground now sits on the xz plane
+                
+                scene.add(groundMesh);
+                
+                // MESH ///////////////////////////////////////////////////////////////////////
+                
+                // LIGHT //////////////////////////////////////////////////////////////////////
+                
+                hemiLight = new THREE.HemisphereLight(0xFFFFFF, 0xFFFFFF, 1);
+                hemiLight.color.setHSL(180, 1, 1);
+                hemiLight.groundColor.setHSL(180, 1, .75);
+                hemiLight.position.set(0, 50, 0);
+                scene.add(hemiLight);
+                
+                hemiLightHelper = new THREE.HemisphereLightHelper(hemiLight, 10);
+                scene.add(hemiLightHelper);
+                
+                // EVENT LISTENERS ////////////////////////////////////////////////////////////
+                
+                document.addEventListener("keydown", onDocumentKeyDown, false);
+                document.addEventListener("keyup", onDocumentKeyUp, false);
+                
+            }
+            
+            function animate(){
+                requestAnimationFrame(animate);
+                deltaTime = clock.getDelta();
+                
+                theta+= rotateCam * deltaTime;
+                
+                theta = (Math.abs(theta) < (2 * Math.PI)) ? theta : 0;
+                camera.position.x = 5 * Math.cos(theta);
+                camera.position.z = 5 * Math.sin(theta);
+                camera.lookAt(new THREE.Vector3(0, 0, 0));
+                
+                renderer.render(scene, camera);
+            }
+            
+            function onDocumentKeyDown(event){
+                const keyCode = event.which;
+                
+                switch(keyCode){
+                    case 87: // w
+                        rotateCam = 1;
+                        //theta += deltaTime;
+                        break;
+                    case 83: // s
+                        rotateCam = -1;
+                        //theta -= deltaTime;
+                        break;
+                    case 32: // space
+                        rotateCam = 0;
+                        theta = 0;
+                        break;
+                }
+            }
+            
+            function onDocumentKeyUp(event){
+                rotateCam = 0;                
+            }
+            
+        </script>
+    </body>
+</html>
